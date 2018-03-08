@@ -16,7 +16,7 @@
 
 //! Implementation of the Bulk API
 
-use hyper::status::StatusCode;
+use hyper::StatusCode;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{Error, MapAccess, Visitor};
@@ -242,14 +242,14 @@ impl<'a, 'b, S> BulkOperation<'a, 'b, S>
         // Doesn't use the standard macros as it's not standard JSON
         let result = self.client.http_client
                        .post(&full_url)
-                       .body(&body)
+                       .body(body)
                        .headers(self.client.headers.clone())
                        .send()?;
 
         let response = do_req(result)?;
 
         match response.status_code() {
-            &StatusCode::Ok => Ok(response.read_response()?),
+            StatusCode::Ok => Ok(response.read_response()?),
             _              => Err(EsError::EsError(format!("Unexpected status: {}", response.status_code())))
         }
     }

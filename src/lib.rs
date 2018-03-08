@@ -36,9 +36,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate log;
 extern crate hyper;
-
-#[cfg(feature = "ssl")]
-extern crate hyper_openssl;
+extern crate reqwest;
 
 #[macro_use]
 extern crate maplit;
@@ -56,8 +54,7 @@ pub mod operations;
 pub mod query;
 pub mod units;
 
-use hyper::client;
-use hyper::status::StatusCode;
+use hyper::StatusCode;
 use hyper::header::{Headers, Authorization, Basic};
 
 use serde::ser::Serialize;
@@ -68,13 +65,13 @@ use error::EsError;
 use url::Url;
 
 pub trait EsResponse {
-    fn status_code(&self) -> &StatusCode;
+    fn status_code(&self) -> StatusCode;
     fn read_response<R>(self) -> Result<R, EsError> where R: DeserializeOwned;
 }
 
-impl EsResponse for client::response::Response {
-    fn status_code(&self) -> &StatusCode {
-        &self.status
+impl EsResponse for reqwest::Response {
+    fn status_code(&self) -> StatusCode {
+        self.status()
     }
 
     fn read_response<R>(self) -> Result<R, EsError>
@@ -92,9 +89,9 @@ impl EsResponse for client::response::Response {
 ///
 /// This function is exposed to allow extensions to certain operations, it is
 /// not expected to be used by consumers of the library
-pub fn do_req(resp: client::response::Response) -> Result<client::response::Response, EsError> {
+pub fn do_req(resp: reqwest::Response) -> Result<reqwest::Response, EsError> {
     let mut resp = resp;
-    let status = resp.status;
+    let status = resp.status();
     match status {
         StatusCode::Ok |
         StatusCode::Created |
@@ -128,14 +125,14 @@ pub fn do_req(resp: client::response::Response) -> Result<client::response::Resp
 /// See the specific operations and their builder objects for details.
 pub struct Client {
     base_url:    Url,
-    http_client: hyper::Client,
+    http_client: reqwest::Client,
     headers:     Headers
 }
 
 /// Create a HTTP function for the given method (GET/PUT/POST/DELETE)
 macro_rules! es_op {
     ($n:ident,$cn:ident) => {
-        fn $n(&mut self, url: &str) -> Result<client::response::Response, EsError> {
+        fn $n(&mut self, url: &str) -> Result<reqwest::Response, EsError> {
             info!("Doing {} on {}", stringify!($n), url);
             let url = self.full_url(url);
             let result = self.http_client
@@ -152,7 +149,7 @@ macro_rules! es_op {
 ///
 macro_rules! es_body_op {
     ($n:ident,$cn:ident) => {
-        fn $n<E>(&mut self, url: &str, body: &E) -> Result<client::response::Response, EsError>
+        fn $n<E>(&mut self, url: &str, body: &E) -> Result<reqwest::Response, EsError>
             where E: Serialize {
 
             info!("Doing {} on {}", stringify!($n), url);
@@ -163,7 +160,7 @@ macro_rules! es_body_op {
             let result = self.http_client
                 .$cn(&url)
                 .headers(self.headers.clone())
-                .body(&json_string)
+                .body(json_string)
                 .send()?;
 
             do_req(result)
@@ -183,16 +180,8 @@ impl Client {
         })
     }
 
-    #[cfg(feature = "ssl")]
-    fn http_client() -> hyper::Client {
-        let ssl = hyper_openssl::OpensslClient::new().unwrap();
-        let connector = hyper::net::HttpsConnector::new(ssl);
-        hyper::Client::with_connector(connector)
-    }
-
-    #[cfg(not(feature = "ssl"))]
-    fn http_client() -> hyper::Client {
-        hyper::Client::new()
+    fn http_client() -> reqwest::Client {
+        reqwest::Client::new()
     }
 
     /// Add headers for the basic authentication to every request

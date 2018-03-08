@@ -16,7 +16,7 @@
 
 //! Implementations of the Count API
 
-use hyper::status::StatusCode;
+use hyper::StatusCode;
 
 use ::{Client, EsResponse};
 use ::error::EsError;
@@ -72,7 +72,7 @@ impl<'a, 'b> CountURIOperation<'a, 'b> {
         info!("Counting with: {}", url);
         let response = self.client.get_op(&url)?;
         match response.status_code() {
-            &StatusCode::Ok => Ok(response.read_response()?),
+            StatusCode::Ok => Ok(response.read_response()?),
             _ => Err(EsError::EsError(format!("Unexpected status: {}",
                                               response.status_code())))
         }
@@ -143,7 +143,7 @@ impl <'a, 'b> CountQueryOperation<'a, 'b> {
                           self.options);
         let response = self.client.post_body_op(&url, &self.body)?;
         match response.status_code() {
-            &StatusCode::Ok => Ok(response.read_response()?),
+            StatusCode::Ok => Ok(response.read_response()?),
             _ => Err(EsError::EsError(format!("Unexpected status: {}",
                                               response.status_code())))
         }

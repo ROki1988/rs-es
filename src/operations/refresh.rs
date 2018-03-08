@@ -16,7 +16,7 @@
 
 //! Refresh an Index
 
-use hyper::status::StatusCode;
+use hyper::StatusCode;
 
 use ::{Client, EsResponse};
 use ::error::EsError;
@@ -49,7 +49,7 @@ impl<'a, 'b> RefreshOperation<'a, 'b> {
                           format_multi(&self.indexes));
         let response = self.client.post_op(&url)?;
         match response.status_code() {
-            &StatusCode::Ok => Ok(response.read_response()?),
+            StatusCode::Ok => Ok(response.read_response()?),
             _              => Err(EsError::EsError(format!("Unexpected status: {}", response.status_code())))
         }
     }

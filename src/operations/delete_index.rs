@@ -16,7 +16,7 @@
 
 //! Implementation of ElasticSearch Delete Index operation
 
-use hyper::status::StatusCode;
+use hyper::StatusCode;
 
 use ::{Client, EsResponse};
 use ::error::EsError;
@@ -35,7 +35,7 @@ impl Client {
         let response = self.delete_op(&url)?;
 
         match response.status_code() {
-            &StatusCode::Ok => Ok(response.read_response()?),
+            StatusCode::Ok => Ok(response.read_response()?),
             _ => Err(EsError::EsError(format!("Unexpected status: {}",
                                               response.status_code())))
         }

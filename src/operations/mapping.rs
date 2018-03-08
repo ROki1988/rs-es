@@ -25,7 +25,7 @@ use std::collections::HashMap;
 
 use serde_json::{Value, Map};
 
-use hyper::status::StatusCode;
+use hyper::StatusCode;
 
 use ::{Client, EsResponse};
 use ::error::EsError;
@@ -127,7 +127,7 @@ impl Client {
         let response = self.post_op(&url)?;
 
         match response.status_code() {
-            &StatusCode::Ok => Ok(response.read_response()?),
+            StatusCode::Ok => Ok(response.read_response()?),
             _ => Err(EsError::EsError(format!("Unexpected status: {}",
                                               response.status_code())))
         }
@@ -139,7 +139,7 @@ impl Client {
         let response = self.post_op(&url)?;
 
         match response.status_code() {
-            &StatusCode::Ok => Ok(response.read_response()?),
+            StatusCode::Ok => Ok(response.read_response()?),
             _ => Err(EsError::EsError(format!("Unexpected status: {}",
                                               response.status_code())))
         }
@@ -152,7 +152,7 @@ impl Client {
         let response = self.get_op(&url)?;
 
         match response.status_code() {
-            &StatusCode::Ok => Ok(()),
+            StatusCode::Ok => Ok(()),
             _ => Err(EsError::EsError(format!("Unexpected status: {}",
                                               response.status_code())))
         }

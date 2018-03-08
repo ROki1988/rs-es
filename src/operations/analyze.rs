@@ -65,7 +65,7 @@ impl<'a, 'b> AnalyzeOperation<'a, 'b> {
         let full_url = client.full_url(&url);
         let req = client.http_client
             .post(&full_url)
-            .body(self.body)
+            .body(self.body.to_string())
             .send()?;
         let response = do_req(req)?;
         Ok(response.read_response()?)

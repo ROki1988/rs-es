@@ -23,7 +23,7 @@ pub mod count;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::Debug;
 
-use hyper::status::StatusCode;
+use hyper::StatusCode;
 
 use serde::de::DeserializeOwned;
 use serde::ser::{Serialize, Serializer};
@@ -446,7 +446,7 @@ impl<'a, 'b> SearchURIOperation<'a, 'b> {
         info!("Searching with: {}", url);
         let response = self.client.get_op(&url)?;
         match response.status_code() {
-            &StatusCode::Ok => {
+            StatusCode::Ok => {
                 let interim:SearchResultInterim<T> = response.read_response()?;
                 Ok(interim.finalize())
             },
@@ -685,7 +685,7 @@ impl <'a, 'b> SearchQueryOperation<'a, 'b> {
                           self.options);
         let response = self.client.post_body_op(&url, &self.body)?;
         match response.status_code() {
-            &StatusCode::Ok => {
+            StatusCode::Ok => {
                 let interim:SearchResultInterim<T> = response.read_response()?;
                 let aggs = match &interim.aggs {
                     &Some(ref raw_aggs) => {
@@ -717,7 +717,7 @@ impl <'a, 'b> SearchQueryOperation<'a, 'b> {
                           self.options);
         let response = self.client.post_body_op(&url, &self.body)?;
         match response.status_code() {
-            &StatusCode::Ok => {
+            StatusCode::Ok => {
                 let interim:ScanResultInterim<T> = response.read_response()?;
                 let aggs = match &interim.aggs {
                     &Some(ref raw_aggs) => {
@@ -733,7 +733,7 @@ impl <'a, 'b> SearchQueryOperation<'a, 'b> {
                 result.aggs = aggs;
                 Ok(result)
             },
-            &StatusCode::NotFound => {
+            StatusCode::NotFound => {
                 Err(EsError::EsServerError(format!("Not found: {:?}", response)))
             },
             _ => Err(EsError::EsError(format!("Unexpected status: {}", response.status_code())))
@@ -989,7 +989,7 @@ impl<T> ScanResult<T>
                           self.scroll_id);
         let response = client.get_op(&url)?;
         match response.status_code() {
-            &StatusCode::Ok => {
+            StatusCode::Ok => {
                 let search_result:SearchResultInterim<T> = response.read_response()?;
                 self.scroll_id = match search_result.scroll_id {
                     Some(ref id) => id.clone(),
@@ -1012,8 +1012,8 @@ impl<T> ScanResult<T>
         let url = format!("/_search/scroll?scroll_id={}", self.scroll_id);
         let response = client.delete_op(&url)?;
         match response.status_code() {
-            &StatusCode::Ok       => Ok(()), // closed
-            &StatusCode::NotFound => Ok(()), // previously closed
+            StatusCode::Ok       => Ok(()), // closed
+            StatusCode::NotFound => Ok(()), // previously closed
             _                     => Err(EsError::EsError(format!("Unexpected status: {}",
                                                                   response.status_code())))
         }
